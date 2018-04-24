@@ -1,0 +1,119 @@
+\documentclass[paper=letter, fontsize=11pt]{article}
+
+\usepackage[total={6in, 8in}]{geometry}
+
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts,amsthm}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{defn}{Definition}
+\newtheorem{case}{Case}[lemma]
+\newtheorem{subcase}{Subcase}[case]
+\usepackage{bm}
+
+\usepackage{subcaption}
+
+\usepackage{graphicx}
+\graphicspath{{images/}}
+
+\usepackage{sectsty}
+\allsectionsfont{\centering \normalfont\scshape}
+
+\newcommand{\bigO}[1]{\mathcal{O}(#1)}
+\newcommand{\bigTilda}[1]{\widetilde{\mathcal{O}}(#1)}
+
+\usepackage{fancyhdr}
+
+\pagestyle{fancyplain}
+\fancyhead[L]{Pratt and Paredes}
+\fancyhead[C]{\textsc{CMU 15-780, Spring 2018}}
+\fancyhead[R]{}
+\fancyfoot[L]{}
+\fancyfoot[C]{}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{1.6pt}
+
+\fancypagestyle{firstpage}{
+  \fancyhead{}
+}
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}}
+\title{
+  \normalfont \normalsize
+  \textsc{Graduate AI, CMU 15-780, Spring 2018} \\ [25pt]
+  \horrule{0.5pt} \\[0.4cm]
+  \huge Tax Evasion Detection Strategy using Game Theory \\
+  \horrule{2pt} \\[0.5cm]
+}
+\author{Kevin Pratt, Pedro Paredes}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{firstpage}
+
+In our project we attempt to find a tax evasion detection strategy by
+looking at the problem as a security game. To do so, we will model the
+IRS as a defender that can audit people and people as attackers that
+can decide to evade taxes or not. We will first describe this model in
+detail and pinpoint some important properties it displays. Then, we
+present an approximate algorithmic solution to find a strategy as
+close to the strong Stackelberg equilibrium as possible (this will be
+better defined later). To test the accuracy of our solution and the
+effectiveness of our model, we will describe a simulation of people
+behavior based on public statistic on tax evasion in the USA and will
+see how our model behaves in this simulation.
+
+\section*{Problem Model}
+
+We model taxable individuals as $n$ targets that might evade or not
+their taxes. If person $i$ evades his or her taxes this is represented
+as the attacker attacking target $i$, thus, the attacker is modeled as
+a collective unit of people. Additionally, each person $i$ has a
+certain taxable income $V_i$. The IRS is represented by a defender
+that can audit $m$ people, that is, can cover $m$ targets. The
+defender strategy is a vector $\bm{c} = (c_1, \ldots, c_n)$
+representing coverage/audit probabilities, such that
+$\sum_{i = 1}^n c_i = m$.
+
+The utility function for the defender/IRS if target/person $t$ evades
+his taxes, under coverage/audit probability $\bm{c}$ is
+$u_d(t, \bm{c}) = u_d^+(t) \cdot c_t + u_d^-(t) \cdot (1 - c_t)$,
+where $u_d^+(t)$ is the defender/IRS's payoff if target/person $t$ is
+covered/audited and $u_d^+(t)$ is the defender/IRS's payoff if
+target/person $t$ is not covered/audited. We set
+$u_d^+(t) = k_v \cdot V_t$, where $k_v$ is some constant we will
+choose between 0 and 1. This choice of $u_d^+(t)$ is made to reflect
+that finding tax evasion in higher income individuals will lead to a
+larger fine. We set $u_d^-(t) = 0$, since not auditing someone that
+evades taxes leads to no payoff.
+
+The utility function for the attacker/people if target/person $t$
+evades his taxes, under coverage/audit probability $\bm{c}$ is
+$u_a(t, \bm{c}) = u_a^+(t) \cdot c_t + u_a^-(t) \cdot (1 - c_t)$,
+where $u_a^+(t)$ is the attacker/people's payoff if target/person $t$
+is covered/audited and $u_a^+(t)$ is the attacker/people's payoff if
+target/person $t$ is not covered/audited. We set
+$u_a^+(t) = -k_v \cdot V_t$. This choice of $u_a^+(t)$ is symmetric to
+$u_d^+(t)$ since the negative outcome of a fine for a person is the
+same as the positive outcome of the IRS. We set
+$u_a^-(t) = k_e \cdot V_t$, where $k_e$ is come constant we will
+choose between 0 and 1. This choice of $u_a^-(t)$ reflects the fact
+that the payoff to evading taxes for an individual is proportional to
+his or her income.
+
+\section*{Approximate Solution}
+
+\cite{conitzer2006computing}
+
+\section*{Testing Framework}
+
+\section*{Testing Results}
+
+\bibliographystyle{alpha}
+\bibliography{project}
+
+\end{document}

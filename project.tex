@@ -69,18 +69,21 @@ see how our model behaves in this simulation.
 
 \section*{Problem Model}
 
-We model taxable individuals as $n$ targets that might evade or not
-their taxes. If person $i$ evades his or her taxes this is represented
-as the attacker attacking target $i$, thus, the attacker is modeled as
-a collective unit of people. Additionally, each person $i$ has a
+We model taxable individuals as a list $P$ of $n$ targets that might
+evade or not their taxes. Each indiviual also acts as an attacker that
+will try to optimize his or her utility independently of other
+people. If person $i$ evades his or her taxes this is represented as
+the $i$ attacker attacking target $i$ (note that the $i$th attacker
+can only attack the $i$th target). Additionally, each person $i$ has a
 certain taxable income $V_i$. The IRS is represented by a defender
 that can audit $m$ people, that is, can cover $m$ targets. The
 defender strategy is a vector $\bm{c} = (c_1, \ldots, c_n)$
 representing coverage/audit probabilities, such that
 $\sum_{i = 1}^n c_i = m$.
 
-The utility function for the defender/IRS if target/person $t$ evades
-his taxes, under coverage/audit probability $\bm{c}$ is
+We first define an utility function for the defender/IRS per
+target/person $t$ as follows. If $t$ evades his taxes, under
+coverage/audit probability $\bm{c}$ is
 $u_d(t, \bm{c}) = u_d^+(t) \cdot c_t + u_d^-(t) \cdot (1 - c_t)$,
 where $u_d^+(t)$ is the defender/IRS's payoff if target/person $t$ is
 covered/audited and $u_d^+(t)$ is the defender/IRS's payoff if
@@ -91,8 +94,20 @@ that finding tax evasion in higher income individuals will lead to a
 larger fine. We set $u_d^-(t) = 0$, since not auditing someone that
 evades taxes leads to no payoff.
 
-The utility function for the attacker/people if target/person $t$
-evades his taxes, under coverage/audit probability $\bm{c}$ is
+Let $A$ be the list of target/people that are attacked/evade. The
+general defender utility function under some coverage/audit
+probability $\bm{c}$ is defined as
+$u_d(\bm{c}) = \sum_{t \in A} u_d(\bm{c}, t) - \sum_{t \in P} k_a
+\cdot V_t \cdot c_t$, where $k_a$ is some constant we will choose
+representing the cost of auditing some one per unit of income. To make
+sure the model is valid, we will always have that $k_a < k_v$,
+otherwise it is more expensive to audit someone than the payoff
+obtained by auditing the person, which means the optimal solution
+would be to not audit anyone.
+
+If attacker/person $i$ does not attack/evade, then his or her utility
+function is 0. The utility function for attacker/person $i$ assuming,
+he or she attacks/evades, under coverage/audit probability $\bm{c}$ is
 $u_a(t, \bm{c}) = u_a^+(t) \cdot c_t + u_a^-(t) \cdot (1 - c_t)$,
 where $u_a^+(t)$ is the attacker/people's payoff if target/person $t$
 is covered/audited and $u_a^+(t)$ is the attacker/people's payoff if

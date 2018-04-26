@@ -157,3 +157,5 @@ ENV/
 *.out
 *.synctex.gz
 *.pdf
+
+*~

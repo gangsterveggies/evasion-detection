@@ -1,0 +1,47 @@
+----- Test 1 -----
+
+Parameters:
+	n = 100
+	m = 5
+	base = 0.3
+
+Results:
+	Model utility:   67846
+	Uniform utility: 33428
+	Random utility:  -4418
+
+----- Test 2 -----
+
+Parameters:
+	n = 500
+	m = 10
+	base = 0.2
+
+Results:
+	Model utility:   226698
+	Uniform utility: 74473
+	Random utility:  -6183
+
+----- Test 3 -----
+
+Parameters:
+	n = 2000
+	m = 100
+	base = 0.15
+
+Results:
+	Model utility:   512220
+	Uniform utility: 392660
+	Random utility:  -63212
+
+----- Test 4 -----
+
+Parameters:
+	n = 10000
+	m = 200
+	base = 0.1
+
+Results:
+	Model utility:   1630706
+	Uniform utility: 494671
+	Random utility:  -125007

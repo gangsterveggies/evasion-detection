@@ -45,7 +45,7 @@
   \normalfont \normalsize
   \textsc{Graduate AI, CMU 15-780, Spring 2018} \\ [25pt]
   \horrule{0.5pt} \\[0.4cm]
-  \huge Tax Evasion Detection Strategy using Game Theory \\
+  \huge Using Game Theory to find Tax Evaders \\
   \horrule{2pt} \\[0.5cm]
 }
 \author{Kevin Pratt, Pedro Paredes}
@@ -55,77 +55,103 @@
 \maketitle
 \thispagestyle{firstpage}
 
-In our project we attempt to find a tax evasion detection strategy by
-looking at the problem as a security game. To do so, we will model the
-IRS as a defender that can audit people and people as attackers that
-can decide to evade taxes or not. We will first describe this model in
-detail and pinpoint some important properties it displays. Then, we
-present an approximate algorithmic solution to find a strategy as
-close to the strong Stackelberg equilibrium as possible (this will be
-better defined later). To test the accuracy of our solution and the
-effectiveness of our model, we will describe a simulation of people
-behavior based on public statistic on tax evasion in the USA and will
-see how our model behaves in this simulation.
+For our project we modeled the U.S. tax system as a multiplayer Stackelberg game between the IRS (the ``defender") and taxpayers (the ``attackers"). In this model the IRS can audit a limited number of taxpayers, and taxpayers can choose to evade taxes in order to maximize their post-tax income. Using heuristic methods we found an approximate Stackelberg equilibrium for the IRS's strategy under this model. We then benchmarked this strategy on a simulation of tax evasion in the U.S.
+
+In this report we will first describe our model in detail. We then present a heuristic algorithm for finding Stackelberg equilibria in our model. We then describe our simulation framework. Finally, we will analyze the results of our simulation.
 
 \section*{Problem Model}
 
-We model taxable individuals as a list $P$ of $n$ targets that might
-evade or not their taxes. Each indiviual also acts as an attacker that
-will try to optimize his or her utility independently of other
-people. If person $i$ evades his or her taxes this is represented as
-the $i$ attacker attacking target $i$ (note that the $i$th attacker
-can only attack the $i$th target). Additionally, each person $i$ has a
-certain taxable income $V_i$. The IRS is represented by a defender
-that can audit $m$ people, that is, can cover $m$ targets. The
-defender strategy is a vector $\bm{c} = (c_1, \ldots, c_n)$
-representing coverage/audit probabilities, such that
-$\sum_{i = 1}^n c_i = m$.
+Our ``tax game" takes place between the IRS and a population $P$ of $n$ taxpayers $t_1, \ldots, t_n$, each having some income $V_{t_i}$. The taxpayers' income is initially drawn from a distribution $D_{income}$. The IRS uses a randomized strategy to perform $m << n$ audits based on income information. We will represent this strategy by a vector $\bm{c} = (c_1, \ldots, c_n)$ of audit probabilities for each of the $n$ taxpayers, where $c_i \in [0,1]$ and $\sum_{i = 1}^n c_i = m$.
 
-We first define an utility function for the defender/IRS per
-target/person $t$ as follows. If $t$ evades his taxes, under
-coverage/audit probability $\bm{c}$ is
-$u_d(t, \bm{c}) = u_d^+(t) \cdot c_t + u_d^-(t) \cdot (1 - c_t)$,
-where $u_d^+(t)$ is the defender/IRS's payoff if target/person $t$ is
-covered/audited and $u_d^+(t)$ is the defender/IRS's payoff if
-target/person $t$ is not covered/audited. We set
-$u_d^+(t) = k_v \cdot V_t$, where $k_v$ is some constant we will
-choose between 0 and 1. This choice of $u_d^+(t)$ is made to reflect
-that finding tax evasion in higher income individuals will lead to a
-larger fine. We set $u_d^-(t) = 0$, since not auditing someone that
-evades taxes leads to no payoff.
+The two parties will then engage in a Stackelberg competition, where the IRS is the leader and the taxpayers are the followers. The game will begin with the IRS announcing $\bm{c}$ \footnote{This information is in fact public!}, and then the taxpayers will deterministically choose whether or not to evade their taxes in order to maximize their utility (described shortly). Thus each taxpayer has two actions to choose from. In our model each taxpayer makes this choice independently of others (intuitively, taxpayers do not work together to evade taxes). We will represent the joint taxpayer strategy with some set $A \subseteq [n]$, where $t \in A$ indicates that $t$ evades their taxes.
 
-Let $A$ be the list of target/people that are attacked/evade. The
-general defender utility function under some coverage/audit
-probability $\bm{c}$ is defined as
-$u_d(\bm{c}) = \sum_{t \in A} u_d(\bm{c}, t) - \sum_{t \in P} k_a
-\cdot V_t \cdot c_t$, where $k_a$ is some constant we will choose
-representing the cost of auditing some one per unit of income. To make
-sure the model is valid, we will always have that $k_a < k_v$,
-otherwise it is more expensive to audit someone than the payoff
-obtained by auditing the person, which means the optimal solution
-would be to not audit anyone.
+Now we describe the utility functions for the taxpayers and the IRS under the IRS strategy $\bm{c}$ and the taxpayer strategy $A$.
 
-If attacker/person $i$ does not attack/evade, then his or her utility
-function is 0. The utility function for attacker/person $i$ assuming,
-he or she attacks/evades, under coverage/audit probability $\bm{c}$ is
-$u_a(t, \bm{c}) = u_a^+(t) \cdot c_t + u_a^-(t) \cdot (1 - c_t)$,
-where $u_a^+(t)$ is the attacker/people's payoff if target/person $t$
-is covered/audited and $u_a^+(t)$ is the attacker/people's payoff if
-target/person $t$ is not covered/audited. We set
-$u_a^+(t) = -k_v \cdot V_t$. This choice of $u_a^+(t)$ is symmetric to
-$u_d^+(t)$ since the negative outcome of a fine for a person is the
-same as the positive outcome of the IRS. We set
-$u_a^-(t) = k_e \cdot V_t$, where $k_e$ is come constant we will
-choose between 0 and 1. This choice of $u_a^-(t)$ reflects the fact
-that the payoff to evading taxes for an individual is proportional to
-his or her income.
+The utility of player $t$ is given by
+
+$$
+u_a(t,\bm{c})=
+\begin{cases}
+c_t \cdot (-k_v \cdot V_t)  + (1-c_t) \cdot (k_e \cdot V_t)  \text{, if $t \in A$}\\
+0, \text{ if $t \notin A$}
+\end{cases}
+$$
+
+where $k_e, k_v$ are some constants in $(0,1)$, $k_v \cdot V_t$ is the penalty to $t$ if they are audited, and $k_e \cdot V_t$ is their payoff if they are not audited.  The rationale behind this utility function is that taxpayers should be penalized/rewarded in proportion to their income.
+
+We now define $u_d(t, \bm{c})$, the IRS's utility for auditing taxpayer $t$. The IRS's overall utility function is then given by $\sum_{t \in P} u_d(t, \bm{c})$.
+
+Let
+
+$$
+u_d(t,\bm{c})=
+\begin{cases}
+c_t(k_v \cdot V_t - k_a\cdot V_t) \text{, if $t \in A$.}\\
+0, \text{ if $t \notin A$}
+\end{cases}
+$$
+
+Here $k_a \in (0,1)$ is the cost of of an audit per unit of income, and $k_v \cdot V_t$ is the IRS's utility for catching $t$. This utility function is motivated by the assumptions that money lost by a tax evader is gained by the IRS, and it is more costly to audit individuals with high income. It also reflects the fact that the IRS will be rewarded more for finding higher income tax evaders. Note that the IRS gets no payoff for auditing a lawful taxpayer. We should also have $k_v > k_a$, since otherwise the utility function above is maximized when the IRS never audits.
 
 \section*{Approximate Solution}
 
-\cite{conitzer2006computing}
+In this section we describe a heuristic algorithm for finding approximate strong Stackelberg Equilibrium (SSE) to the game described in the previous section. We first recall what a SSE is in the context of our game. Then we describe a greedy variant of the algorithm in \cite{conitzer2006computing} that can be used to give a heuristic SSE to our multiplayer game.
+
+In the context of our tax game, a SSE is defined as follows. First, note that each value of $\bm{c}$ induces some strategy $A$ for the taxpayers (recall that this is the set of tax evaders). Then $A$ defines a value of $u_d(\bm{c})$. A SSE is the value of $\bm{c}$ that maximizes this value, assuming the taxpayers break ties in favor of the IRS.
+
+First, note that this problem can be solved by a straightforward implementation of the algorithm in \cite{conitzer2006computing}. For a taxpayer strategy $A$, let $LP(A)$ equal be the IRS strategy $\bm{c}$ such that (1) $A$ is the best taxpayer response to $\bm{c}$, and (2) under this constraint, $\bm{c}$ is optimal. Then we have the following algorithm.
+
+\begin{verbatim}
+compute_SSE_exact(population P)
+     let opt = IRS strategy with 0 defender utility
+     let atk = taxpayer strategy
+     For all taxpayer strategies A
+          c* = LP(A)
+          if u_d(c*,A) > u_d(opt,atk)
+               opt = c*
+               atk = A
+     return opt
+\end{verbatim}
+
+There are two practical problems with this algorithm. First, since there are $n$ taxpayers and each one can take two actions, there are $2^n$ possible taxpayer strategies. Thus an exhaustive enumeration will be impractical. In addition, the LP as formulated above has a constraint for every taxpayer strategy.
+
+We resolve both problems with the following greedy heuristic for sampling taxpayer strategies. Suppose we have some ordering $\pi$ of the population $P$. We will consider the best IRS strategy that can be obtained by iterating over the population in the order $\pi$, and greedily deciding at iteration $i$ whether it would benefit the IRS for $\pi(i)$ to evade/pay. More precisely, we define $LP_2(A, i, 1)$ to be the IRS strategy $\bm{c}$ such that (1) $A \cup t_i$ is a better taxpayer response to $\bm{c}$ than $A$, and (2) under this constraint, $\bm{c}$ is optimal. Similarly, $LP_2(A, i, 0)$ is the IRS strategy for step $i$ where $A$ is the better taxpayer response to $\bm{c}$, and $\bm{c}$ is optimal under this constraint. At each step we choose the better of $LP_2(A,i,0)$ and $LP_2(A,i,1)$, and add $t_i$ to the set of tax evaders if appropriate. Note that this LP only has a constraint for one alternative taxpayer strategy. Since the resulting strategy depends on $\pi$, we average the result over many permutations $\pi$. In pseudocode:
+
+\begin{verbatim}
+compute_SSE_greedy(population P)
+     c = tentative IRS strategy
+     Repeat
+          Let pi be a random permutation of [n]
+          set A = []
+          let opt = strategy with 0 defender utility
+          let atk = taxpayer strategy
+          for i = 1 to n
+               s1 = LP_2(A,i,0)
+               s2 = LP_2(A,i,1)
+               if u_d(s1,A) > u_d(s2,A) and u_d(s1,A) > u_d(opt, atk)
+                   opt = s1
+                   atk = A
+              else  if u_d(s1,A) < u_d(s2,A) and u_d(s2,A u i) > u_d(opt, atk)
+                   opt = s2
+                   atk = A u i
+          Average c with opt
+     return c
+\end{verbatim}
 
 \section*{Testing Framework}
+Fix parameters $n, m, D_{income}, k_e, k_v, k_t$, as described in the section 1, along with a function $f : \mathbb{R} \to \mathbb{R}$  mapping incomes to evasion probabilities. We measure the quality of the strategy $\bm{c}$ obtained from \verb|compute_SSE_greedy()| via the following simulation. 
 
+\begin{enumerate}
+\item Sample population incomes $V_1, \ldots, V_n$ from $D_{income}$.
+\item Let $\bm{c} =$ \verb|compute_SSE_greedy(P)|. Initialize a list $L$ of defender utilities.
+\item Repeat many times:
+\subitem Sample a pure IRS audit strategy from $\bm{c}$.
+\subitem Compute $A$, the set of taxpayers who evade taxes, from $f$ and $\bm{c}$.
+\subitem Compute $u_d(\bm{c},A)$ and add to $L$.
+\item Return the average of the IRS utilities in L
+\end{enumerate}
+
+To benchmark our solution, we will modify step 2 of the above algorithm to use different IRS strategies. We will then compare the outcomes.
 \section*{Testing Results}
 
 \bibliographystyle{alpha}

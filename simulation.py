@@ -57,7 +57,7 @@ def simulate(n, m, base, c = None, verbose = False):
 
     if c == None:
         if verbose: print("Generating model...")
-        c = model.gen_model2(population, m, verbose = verbose)
+        c = model.gen_model(population, m, verbose = verbose)
 
     avg_u = 0
     avg_evaders = 0

@@ -19,31 +19,7 @@ def attacker_utility(c, attacker, population):
     uam = lambda t: data.ke * population[t]
     return uap(attacker) * c[attacker] + uam(attacker) * (1 - c[attacker])
 
-def solve_LP(n, m, attacker, attacker_list, population):
-    c = Variable(n)
-    objective = Maximize(defender_utility_approximated(c, attacker_list, population))
-    #    constraints = [attacker_utility(c, attacker, attacker_list, population) >= attacker_utility(c, attacker, perturb(attacker_list), population) for _ in range(data.perturb_number)] + [sum(c) == m, c <= 1, c >= 0]
-
-    constraints = [sum(c) == m, c <= 1, c >= 0] + [attacker_utility(c, attacker, population) >= 0]
-
-    prob = Problem(objective, constraints)
-    result = prob.solve()
-
-    if prob.status == OPTIMAL: return (result, True, c.value)
-    else: return (result, False, [])
-
-def solve_unrestricted_LP(n, m, attacker_list, population):
-    c = Variable(n)
-    objective = Maximize(defender_utility_approximated(c, attacker_list, population))
-    constraints = [sum(c) == m, c <= 1, c >= 0]
-
-    prob = Problem(objective, constraints)
-    result = prob.solve()
-
-    if prob.status == OPTIMAL: return (result, True, c.value)
-    else: return (result, False, [])
-
-def solve_LP2(n, m, attacker_list, population):
+def solve_LP(n, m, attacker_list, population):
     c = Variable(n)
     objective = Maximize(defender_utility_exact(c, attacker_list, population))
     constraints = [sum(c) == m, c <= 1, c >= 0] + [attacker_utility(c, attacker, population) >= 0 for attacker in attacker_list]
@@ -59,46 +35,9 @@ def gen_model(population, m, verbose = False):
     attacker_list = []
 
     for it in range(data.model_iteration_number):
-        if verbose: print("Model iteration " + str(it + 1))
-        population_order = [i for i in range(n)]
-        random.shuffle(population_order)
-
-        print_number = 1
-        for t in population_order:
-            if print_number % 10 == 0 and verbose: print("10 more individuals (" + str(n - print_number) + " remaining)")
-            print_number += 1
-
-            if t in attacker_list: attacker_list.remove(t)
-            attacker_list.append(t)
-            pt, vt, ct = solve_LP(n, m, t, attacker_list, population)
-
-            c = [max(0, min(float(i), 1)) for i in ct]
-
-            if vt:
-                if attacker_utility(c, t, population) <= 0:
-                    attacker_list.pop()
-
-    pt, vt, ct = solve_unrestricted_LP(n, m, attacker_list, population)
-    best_c = [max(0, min(float(i), 1)) for i in ct]
-    best_utility = pt
-
-    if verbose:
-        print(len(attacker_list))
-        attacker_list.sort()
-        print(attacker_list)
-        print(best_utility)
-        print(defender_utility_exact(best_c, attacker_list, population))
-#        print(defender_utility_approximated([0, 0, 0, 0, 0, 1, 1, 0, 0], attacker_list, population))
-    return best_c
-
-def gen_model2(population, m, verbose = False):
-    n = len(population)
-    attacker_list = []
-
-    for it in range(data.model2_iteration_number):
         if (it + 1) % 10 == 0 and verbose: print("Model iteration " + str(it + 1))
 
-        pt, vt, ct = solve_LP2(n, m, attacker_list, population)
+        pt, vt, ct = solve_LP(n, m, attacker_list, population)
         c = [max(0, min(float(i), 1)) for i in ct]
 
         for t in range(n):
@@ -109,7 +48,7 @@ def gen_model2(population, m, verbose = False):
                 if attacker_utility(c, t, population) >= 0:
                     attacker_list.append(t)
 
-    pt, vt, ct = solve_LP2(n, m, attacker_list, population)
+    pt, vt, ct = solve_LP(n, m, attacker_list, population)
     best_c = [max(0, min(float(i), 1)) for i in ct]
     best_utility = pt
 

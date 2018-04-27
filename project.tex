@@ -11,6 +11,7 @@
 \newtheorem{case}{Case}[lemma]
 \newtheorem{subcase}{Subcase}[case]
 \usepackage{bm}
+\usepackage{hyperref}
 
 \usepackage{subcaption}
 
@@ -55,17 +56,45 @@
 \maketitle
 \thispagestyle{firstpage}
 
-For our project we modeled the U.S. tax system as a multiplayer Stackelberg game between the IRS (the ``defender") and taxpayers (the ``attackers"). In this model the IRS can audit a limited number of taxpayers, and taxpayers can choose to evade taxes in order to maximize their post-tax income. Using heuristic methods we found an approximate Stackelberg equilibrium for the IRS's strategy under this model. We then benchmarked this strategy on a simulation of tax evasion in the U.S.
+For our project we modeled the U.S. tax system as a multiplayer
+Stackelberg game between the IRS (the ``defender") and taxpayers (the
+``attackers"). In this model the IRS can audit a limited number of
+taxpayers, and taxpayers can choose to evade taxes in order to
+maximize their post-tax income. Using heuristic methods we found an
+approximate Stackelberg equilibrium for the IRS's strategy under this
+model. We then benchmarked this strategy on a simulation of tax
+evasion in the U.S.
 
-In this report we will first describe our model in detail. We then present a heuristic algorithm for finding Stackelberg equilibria in our model. We then describe our simulation framework. Finally, we will analyze the results of our simulation.
+In this report we will first describe our model in detail. We then
+present a heuristic algorithm for finding Stackelberg equilibria in
+our model. We then describe our simulation framework. Finally, we will
+analyze the results of our simulation.
 
 \section*{Problem Model}
 
-Our ``tax game" takes place between the IRS and a population $P$ of $n$ taxpayers $t_1, \ldots, t_n$, each having some income $V_{t_i}$. The taxpayers' income is initially drawn from a distribution $D_{income}$. The IRS uses a randomized strategy to perform $m << n$ audits based on income information. We will represent this strategy by a vector $\bm{c} = (c_1, \ldots, c_n)$ of audit probabilities for each of the $n$ taxpayers, where $c_i \in [0,1]$ and $\sum_{i = 1}^n c_i = m$.
+Our ``tax game" takes place between the IRS and a population $P$ of
+$n$ taxpayers $t_1, \ldots, t_n$, each having some income
+$V_{t_i}$. The taxpayers' income is initially drawn from a
+distribution $D_{income}$. The IRS uses a randomized strategy to
+perform $m << n$ audits based on income information. We will represent
+this strategy by a vector $\bm{c} = (c_1, \ldots, c_n)$ of audit
+probabilities for each of the $n$ taxpayers, where $c_i \in [0,1]$ and
+$\sum_{i = 1}^n c_i = m$.
 
-The two parties will then engage in a Stackelberg competition, where the IRS is the leader and the taxpayers are the followers. The game will begin with the IRS announcing $\bm{c}$ \footnote{This information is in fact public!}, and then the taxpayers will deterministically choose whether or not to evade their taxes in order to maximize their utility (described shortly). Thus each taxpayer has two actions to choose from. In our model each taxpayer makes this choice independently of others (intuitively, taxpayers do not work together to evade taxes). We will represent the joint taxpayer strategy with some set $A \subseteq [n]$, where $t \in A$ indicates that $t$ evades their taxes.
+The two parties will then engage in a Stackelberg competition, where
+the IRS is the leader and the taxpayers are the followers. The game
+will begin with the IRS announcing $\bm{c}$ \footnote{This information
+  is in fact public!}, and then the taxpayers will deterministically
+choose whether or not to evade their taxes in order to maximize their
+utility (described shortly). Thus each taxpayer has two actions to
+choose from. In our model each taxpayer makes this choice
+independently of others (intuitively, taxpayers do not work together
+to evade taxes). We will represent the joint taxpayer strategy with
+some set $A \subseteq [n]$, where $t \in A$ indicates that $t$ evades
+their taxes.
 
-Now we describe the utility functions for the taxpayers and the IRS under the IRS strategy $\bm{c}$ and the taxpayer strategy $A$.
+Now we describe the utility functions for the taxpayers and the IRS
+under the IRS strategy $\bm{c}$ and the taxpayer strategy $A$.
 
 The utility of player $t$ is given by
 
@@ -77,9 +106,15 @@ c_t \cdot (-k_v \cdot V_t)  + (1-c_t) \cdot (k_e \cdot V_t)  \text{, if $t \in A
 \end{cases}
 $$
 
-where $k_e, k_v$ are some constants in $(0,1)$, $k_v \cdot V_t$ is the penalty to $t$ if they are audited, and $k_e \cdot V_t$ is their payoff if they are not audited.  The rationale behind this utility function is that taxpayers should be penalized/rewarded in proportion to their income.
+where $k_e, k_v$ are some constants in $(0,1)$, $k_v \cdot V_t$ is the
+penalty to $t$ if they are audited, and $k_e \cdot V_t$ is their
+payoff if they are not audited.  The rationale behind this utility
+function is that taxpayers should be penalized/rewarded in proportion
+to their income.
 
-We now define $u_d(t, \bm{c})$, the IRS's utility for auditing taxpayer $t$. The IRS's overall utility function is then given by $\sum_{t \in P} u_d(t, \bm{c})$.
+We now define $u_d(t, \bm{c})$, the IRS's utility for auditing
+taxpayer $t$. The IRS's overall utility function is then given by
+$\sum_{t \in P} u_d(t, \bm{c})$.
 
 Let
 
@@ -91,55 +126,100 @@ c_t(k_v \cdot V_t - k_a\cdot V_t) \text{, if $t \in A$.}\\
 \end{cases}
 $$
 
-Here $k_a \in (0,1)$ is the cost of of an audit per unit of income, and $k_v \cdot V_t$ is the IRS's utility for catching $t$. This utility function is motivated by the assumptions that money lost by a tax evader is gained by the IRS, and it is more costly to audit individuals with high income. It also reflects the fact that the IRS will be rewarded more for finding higher income tax evaders. Note that the IRS gets no payoff for auditing a lawful taxpayer. We should also have $k_v > k_a$, since otherwise the utility function above is maximized when the IRS never audits.
+Here $k_a \in (0,1)$ is the cost of of an audit per unit of income,
+and $k_v \cdot V_t$ is the IRS's utility for catching $t$. This
+utility function is motivated by the assumptions that money lost by a
+tax evader is gained by the IRS, and it is more costly to audit
+individuals with high income. It also reflects the fact that the IRS
+will be rewarded more for finding higher income tax evaders. Note that
+the IRS gets no payoff for auditing a lawful taxpayer. We should also
+have $k_v > k_a$, since otherwise the utility function above is
+maximized when the IRS never audits.
 
 \section*{Approximate Solution}
 
-In this section we describe a heuristic algorithm for finding approximate strong Stackelberg Equilibrium (SSE) to the game described in the previous section. We first recall what a SSE is in the context of our game. Then we describe a greedy variant of the algorithm in \cite{conitzer2006computing} that can be used to give a heuristic SSE to our multiplayer game.
+In this section we describe a heuristic algorithm for finding
+approximate strong Stackelberg Equilibrium (SSE) to the game described
+in the previous section. We first recall what a SSE is in the context
+of our game. Then we describe a greedy variant of the algorithm in
+\cite{conitzer2006computing} that can be used to give a heuristic SSE
+to our multiplayer game.
 
-In the context of our tax game, a SSE is defined as follows. First, note that each value of $\bm{c}$ induces some strategy $A$ for the taxpayers (recall that this is the set of tax evaders). Then $A$ defines a value of $u_d(\bm{c})$. A SSE is the value of $\bm{c}$ that maximizes this value, assuming the taxpayers break ties in favor of the IRS.
+In the context of our tax game, a SSE is defined as follows. First,
+note that each value of $\bm{c}$ induces some strategy $A$ for the
+taxpayers (recall that this is the set of tax evaders). Then $A$
+defines a value of $u_d(\bm{c})$. A SSE is the value of $\bm{c}$ that
+maximizes this value, assuming the taxpayers break ties in favor of
+the IRS.
 
-First, note that this problem can be solved by a straightforward implementation of the algorithm in \cite{conitzer2006computing}. For a taxpayer strategy $A$, let $LP(A)$ equal be the IRS strategy $\bm{c}$ such that (1) $A$ is the best taxpayer response to $\bm{c}$, and (2) under this constraint, $\bm{c}$ is optimal. Then we have the following algorithm.
+First, note that this problem can be solved by a straightforward
+implementation of the algorithm in \cite{conitzer2006computing}. For a
+taxpayer strategy $A$, let $LP(A)$ equal be the IRS strategy $\bm{c}$
+such that (1) $A$ is the best taxpayer response to $\bm{c}$, and (2)
+under this constraint, $\bm{c}$ is optimal. Then we have the following
+algorithm.
 
 \begin{verbatim}
 compute_SSE_exact(population P)
-     let opt = IRS strategy with 0 defender utility
-     let atk = taxpayer strategy
-     For all taxpayer strategies A
-          c* = LP(A)
-          if u_d(c*,A) > u_d(opt,atk)
-               opt = c*
-               atk = A
-     return opt
+    let opt = IRS strategy with 0 defender utility
+    let atk = taxpayer strategy
+    For all taxpayer strategies A
+        c* = LP(A)
+        if u_d(c*,A) > u_d(opt,atk)
+            opt = c*
+            atk = A
+    return opt
 \end{verbatim}
 
-There are two practical problems with this algorithm. First, since there are $n$ taxpayers and each one can take two actions, there are $2^n$ possible taxpayer strategies. Thus an exhaustive enumeration will be impractical. In addition, the LP as formulated above has a constraint for every taxpayer strategy.
+There are two practical problems with this algorithm. First, since
+there are $n$ taxpayers and each one can take two actions, there are
+$2^n$ possible taxpayer strategies. Thus an exhaustive enumeration
+will be impractical. In addition, the LP as formulated above has a
+constraint for every taxpayer strategy.
 
-We resolve both problems with the following greedy heuristic for sampling taxpayer strategies. Suppose we have some ordering $\pi$ of the population $P$. We will consider the best IRS strategy that can be obtained by iterating over the population in the order $\pi$, and greedily deciding at iteration $i$ whether it would benefit the IRS for $\pi(i)$ to evade/pay. More precisely, we define $LP_2(A, i, 1)$ to be the IRS strategy $\bm{c}$ such that (1) $A \cup t_i$ is a better taxpayer response to $\bm{c}$ than $A$, and (2) under this constraint, $\bm{c}$ is optimal. Similarly, $LP_2(A, i, 0)$ is the IRS strategy for step $i$ where $A$ is the better taxpayer response to $\bm{c}$, and $\bm{c}$ is optimal under this constraint. At each step we choose the better of $LP_2(A,i,0)$ and $LP_2(A,i,1)$, and add $t_i$ to the set of tax evaders if appropriate. Note that this LP only has a constraint for one alternative taxpayer strategy. Since the resulting strategy depends on $\pi$, we average the result over many permutations $\pi$. In pseudocode:
+We resolve both problems with the following greedy heuristic for
+sampling taxpayer strategies. We start by considering a taxpayer
+strategy where no one evades, that is $A = \emptyset$. Next we compute
+the optimal IRS strategy under this assumption, which some
+$\bm{c}^i$. Then, each taxpayer will compute their utility under
+$\bm{c}^i$ when they evade (recall that an attacker's utility when not
+evading is always 0). The ones who have positive such utility will
+change their strategy to evade, which means they will be added to
+$A$. We repeat this procedure $it$ times: compute the optimal IRS
+strategy using the taxpayer strategy obtained in the previous
+iteration; update the taxpayer strategy by setting the strategy of the
+taxpayers with positive utility under the computed IRS strategy to
+evade and the ones with non-positive utility to not evade.
+
+To compute the optimal IRS strategy under some taxpayer strategy we
+will use a different version of the linear program used in the exact
+algorithm. First, define $LP_2(A)$ to be the IRS strategy $\bm{c}$
+such that (1) for all $t_i \in A$ we have that $u_a(\bm{c}, t_i) > 0$,
+and (2) under this constraint, $\bm{c}$ maximizes $u_d(\bm{c})$. This
+can be easily computed with a linear program similar to the exact
+algorithm one.
+
+Combining all of this, we have the following pseudocode:
 
 \begin{verbatim}
 compute_SSE_greedy(population P)
-     c = tentative IRS strategy
-     Repeat
-          Let pi be a random permutation of [n]
-          set A = []
-          let opt = strategy with 0 defender utility
-          let atk = taxpayer strategy
-          for i = 1 to n
-               s1 = LP_2(A,i,0)
-               s2 = LP_2(A,i,1)
-               if u_d(s1,A) > u_d(s2,A) and u_d(s1,A) > u_d(opt, atk)
-                   opt = s1
-                   atk = A
-              else  if u_d(s1,A) < u_d(s2,A) and u_d(s2,A u i) > u_d(opt, atk)
-                   opt = s2
-                   atk = A u i
-          Average c with opt
-     return c
+    set A = []
+    Repeat it times
+        c = LP_2(A)
+        for i = 1 to n
+            if u_a(c, i) <= 0 and i in A
+                remove i from A
+            else if u_a(c, i) > 0 and not(i in A)
+                add i to A
+    return LP_2(A)
 \end{verbatim}
 
 \section*{Testing Framework}
-Fix parameters $n, m, D_{income}, k_e, k_v, k_t$, as described in the section 1, along with a function $f : \mathbb{R} \to \mathbb{R}$  mapping incomes to evasion probabilities. We measure the quality of the strategy $\bm{c}$ obtained from \verb|compute_SSE_greedy()| via the following simulation. 
+We fix parameters $n, m, D_{income}, k_e, k_v, k_t$, as described in
+Section 1, along with a function $f : \mathbb{R} \to \mathbb{R}$
+mapping incomes to evasion probabilities. We measure the quality of
+the strategy $\bm{c}$ obtained from \verb|compute_SSE_greedy()| via
+the following simulation.
 
 \begin{enumerate}
 \item Sample population incomes $V_1, \ldots, V_n$ from $D_{income}$.
@@ -147,12 +227,64 @@ Fix parameters $n, m, D_{income}, k_e, k_v, k_t$, as described in the section 1,
 \item Repeat many times:
 \subitem Sample a pure IRS audit strategy from $\bm{c}$.
 \subitem Compute $A$, the set of taxpayers who evade taxes, from $f$ and $\bm{c}$.
-\subitem Compute $u_d(\bm{c},A)$ and add to $L$.
-\item Return the average of the IRS utilities in L
+\subitem Compute $u_d(\bm{c}, A)$ and add to $L$.
+\item Return the average of the IRS utilities in $L$.
 \end{enumerate}
 
-To benchmark our solution, we will modify step 2 of the above algorithm to use different IRS strategies. We will then compare the outcomes.
+To benchmark our solution, we will modify step 2 of the above
+algorithm to use different IRS strategies. We will then compare the
+outcomes.
+
 \section*{Testing Results}
+
+We implemented this algorithm in Python using the \texttt{cvxpython}
+library \footnote{The code is available at
+  \url{https://github.com/gangsterveggies/evasion-detection}}. We also
+implemented two benchmark algorithms: one that assigns every taxpayer
+the same audit probability, which we call \texttt{uniform} model; one
+that assigns every taxpayer a uniformly random probability, which we
+call \texttt{random} model. We will refer to our model as the
+\texttt{gtmodel} model.
+
+We tried different values of $k_e, k_v, k_t$ with $k_a << k_e < k_v$
+and settled on ones that got the best model utility. For $D_{income}$
+we used data from the US Census Bureau, namely an histogram of the
+percentage of the population by yearly household income and built a
+uniform distribution in each income bracket. Finally, we used data
+from the tax foundation on percentage of audits per yearly income to
+build our function $f$, that assigns a uniform probability of evading
+according to the percentage of audits histogram bracket.
+
+We tested our model with different values of $n$ and $m$ against the
+baseline methods and computed the obtained utility using the
+simulation framework described in the previous section. We summarize
+those results in Table 1.
+
+\begin{table}[h!]
+  \centering
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    & $n = 100, m = 5$ & $n = 500, m = 10$ & $n = 2000, m = 200$ & $n = 10000, m = 200$\\ \hline \hline
+    \texttt{gtmodel}   & 67,846 & 226,698 & 512,220 & 1,630,706 \\ \hline
+    \texttt{uniform} & 33,428 & 74,473  & 392,660 & 494,671  \\ \hline
+    \texttt{random}  & -4,418 & -6,183  & -63,212 & -125,007 \\ \hline
+  \end{tabular}
+  \caption{Utility obtained for different models using the simulation
+    framework for different parameters}
+\end{table}
+
+It is clear that a purely random model does not achieve good
+results. Since every taxpayer will avoid evading if their auditing
+probability is too high and will always evade if their auditing
+probability is too low, the optimal strategy has to be close to the
+uniform model, which indeed obtains good results. Even so, our model
+was able to beat the uniform model by an average of twice of the
+utility.
+
+The only downside of our model is that it is rather slow, since it
+needs to compute several linear programs with up to $n$ constraints
+and $n$ variables. For the largest example ($n = 20000$) it took
+around 10 minutes to compute.
 
 \bibliographystyle{alpha}
 \bibliography{project}
